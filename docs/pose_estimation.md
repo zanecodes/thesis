@@ -18,3 +18,10 @@
 
 ## Depth-based
 
+# Challenges
+
+* Many degrees of freedom (up to 20) 
+* Self-occlusion
+* Processing speed
+* Environmental variation
+* Hand motion speed (Erol, Bebis, et al)
