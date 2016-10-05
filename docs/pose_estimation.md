@@ -8,9 +8,18 @@
 * Learning-free
   * Uses kinematic constraints to solve pose ambiguity
 
+* Partal estimation
+* Full estimation
+  * Single frame
+  * Model-based tracking
+    * Single hypothesis
+      * Particle Swarm Optimization
+    * Multiple hypothesis (Erol, Bebis, et al)
+
 ### Learning-based
 
 * Regression forest models (Xu, Chi, et al)
+* Deep learning (Oberweger, Wohlhart, & Lepetit)
 
 ### Learning-free
 
