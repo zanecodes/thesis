@@ -6,10 +6,17 @@
 * ~~Clone https://github.com/jsupancic/deep_hand_pose and run some code~~
 * Reimplement Deep Hand Pose in TensorFlow
   * Build the graph structure
+    * Read the graph protobuffer format, understand the graph layers & vector input/output shapes, document
+    * Translate graph into TensorFlow graph
   * Convert the NYU dataset to something TensorFlow can read
-  * Convert labels to something useful
+    * Look at converting .png to TensorFlow vectors (TFRecord files?)
+    * Read labels and understand/document their format
+    * Convert .csv labels to TFRecord files maybe
   * Convert the trained weights if possible
-* Make a short slideshow
-  * Overview/background of project
-  * Problem statement (inputs, outputs, process)
-  * Goals (mobile, non-depth)
+    * Look up Caffe weight format
+    * Try using caffe-tensorflow to convert weights
+    * Otherwise, convert Caffe weights into TensorFlow weights
+* ~~Make a short slideshow~~
+  * ~~Overview/background of project~~
+  * ~~Problem statement (inputs, outputs, process)~~
+  * ~~Goals (mobile, non-depth)~~
