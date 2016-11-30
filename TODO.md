@@ -1,5 +1,7 @@
 # TODO
 
+## Overall
+
 * Research research strategies
 * ~~Email EIT for download exemption~~
 * ~~Download http://horatio.cs.nyu.edu/mit/tompson/nyu_hand_dataset_v2.zip~~
@@ -20,3 +22,7 @@
   * ~~Overview/background of project~~
   * ~~Problem statement (inputs, outputs, process)~~
   * ~~Goals (mobile, non-depth)~~
+
+## This week
+
+* Look at converting .png to TensorFlow vectors (TFRecord files?)
