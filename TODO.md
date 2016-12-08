@@ -11,7 +11,8 @@
     * Read the graph protobuffer format, understand the graph layers & vector input/output shapes, document
     * Translate graph into TensorFlow graph
   * Convert the NYU dataset to something TensorFlow can read
-    * Look at converting .png to TensorFlow vectors (TFRecord files?)
+    * ~~Look at converting .png to TensorFlow vectors (TFRecord files?)~~
+    * Figure out how to add images to .npz file individually
     * Read labels and understand/document their format
     * Convert .csv labels to TFRecord files maybe
   * Convert the trained weights if possible
@@ -25,4 +26,6 @@
 
 ## This week
 
-* Look at converting .png to TensorFlow vectors (TFRecord files?)
+* Figure out how to add images to .npz file individually
+
+Deliverable: .npz files with each set of images
