@@ -34,3 +34,30 @@ The NYU dataset used in [Real-Time Continuous Pose Recovery of Human Hands Using
 * train/synthdepth_3_NNNNNNN.png
 
 where NNNNNNN starts at 0000001.
+
+### Image types
+
+#### Depth images
+640 x 480 x 1
+Blue channel contains depth information.
+
+##### depth_1_NNNNNNN.png
+Front view depth images.
+
+##### depth_2_NNNNNNN.png
+Top view depth images.
+
+##### depth_3_NNNNNNN.png
+Right view depth images.
+
+#### RGB images
+640 x 480 x 3
+
+##### rgb_1_NNNNNNN.png
+Front view RGB images.
+
+##### rgb_2_NNNNNNN.png
+Top view RGB images.
+
+##### rgb_3_NNNNNNN.png
+Right view RGB images. 
