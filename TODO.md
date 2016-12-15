@@ -12,9 +12,9 @@
     * Translate graph into TensorFlow graph
   * Convert the NYU dataset to something TensorFlow can read
     * ~~Look at converting .png to TensorFlow vectors (TFRecord files?)~~
-    * Figure out how to add images to .npz file individually
+    * ~~Figure out how to add images to .npz file individually~~
     * Read labels and understand/document their format
-    * Convert .csv labels to TFRecord files maybe
+    * Add .csv labels to HDF5 file
   * Convert the trained weights if possible
     * Look up Caffe weight format
     * Try using caffe-tensorflow to convert weights
@@ -26,6 +26,4 @@
 
 ## This week
 
-* Figure out how to add images to .npz file individually
-
-Deliverable: .npz files with each set of images
+* Read labels and understand/document their format
