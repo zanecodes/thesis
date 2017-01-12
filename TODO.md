@@ -8,8 +8,10 @@
 * ~~Clone https://github.com/jsupancic/deep_hand_pose and run some code~~
 * Reimplement Deep Hand Pose in TensorFlow
   * Build the graph structure
-    * Read the graph protobuffer format, understand the graph layers & vector input/output shapes, document
-    * Translate graph into TensorFlow graph
+    * ~~Read the graph protobuffer format, understand the graph layers & vector input/output shapes, document~~
+    * Translate graph into Keras graph
+    * Run and debug Keras graph
+    * Translate graph into TensorFlow graph if Keras is too difficult to debug
   * Convert the NYU dataset to something TensorFlow can read
     * ~~Look at converting .png to TensorFlow vectors (TFRecord files?)~~
     * ~~Figure out how to add images to .npz file individually~~
