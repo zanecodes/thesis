@@ -11,7 +11,6 @@
     * ~~Read the graph protobuffer format, understand the graph layers & vector input/output shapes, document~~
     * ~~Translate graph into Keras graph~~
     * Run and debug Keras graph
-    * Translate graph into TensorFlow graph if Keras is too difficult to debug
   * Convert the NYU dataset to something TensorFlow can read
     * ~~Look at converting .png to TensorFlow vectors (TFRecord files?)~~
     * ~~Figure out how to add images to .npz file individually~~
@@ -25,8 +24,12 @@
   * ~~Overview/background of project~~
   * ~~Problem statement (inputs, outputs, process)~~
   * ~~Goals (mobile, non-depth)~~
+* Write a paper draft
+  * Synthesize information from slideshow
+  * Collect sources
+  * Document research process
+  * Report on preliminary results (if any)
 
 ## This week
 
-* Comment code to indicate sources
-* Run and debug Keras graph
+* Write a paper draft
