@@ -33,3 +33,6 @@
 ## This week
 
 * Write a paper draft
+* Create a GitHub page
+* Work on a journal / log
+* Add 'why' to code documentation
