@@ -11751,9 +11751,25 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Hand-Pose-Estimation-with-Keras">Hand Pose Estimation with Keras<a class="anchor-link" href="#Hand-Pose-Estimation-with-Keras">&#182;</a></h1><h2 id="Zane-Geiger">Zane Geiger<a class="anchor-link" href="#Zane-Geiger">&#182;</a></h2><p>Hand pose estimation is a difficult problem with many potential applications in virtual reality, augmented reality. Depth information makes it a more tractable task, but there are still many challenges involved due to the high dimensionality of hand pose information, self-similarity, and self-occlusion. Recent papers have applied deep convolutional neural networks to this problem, with high levels of success. Enforcing a prior model on the hand pose further improves predictions, as well as refining joint locations using independent networks.</p>
+<h1 id="Hand-Pose-Estimation-with-Keras">Hand Pose Estimation with Keras<a class="anchor-link" href="#Hand-Pose-Estimation-with-Keras">&#182;</a></h1><h2 id="Zane-Geiger">Zane Geiger<a class="anchor-link" href="#Zane-Geiger">&#182;</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">&#182;</a></h3><p>Hand pose estimation is a difficult problem with many potential applications in virtual reality, augmented reality. Depth information makes it a more tractable task, but there are still many challenges involved due to the high dimensionality of hand pose information, self-similarity, and self-occlusion. Recent papers have applied deep convolutional neural networks to this problem, with high levels of success. Enforcing a prior model on the hand pose further improves predictions, as well as refining joint locations using independent networks.</p>
 <p>Modern deep learning toolkits such as TensorFlow and Keras enable rapid prototyping of network architectures and hyperparameters. Importantly, TensorFlow makes it relatively easy to run models on low-powered hardware, providing libraries for Android and ARM devices and accelerating computations by offloading them to the mobile GPU. With this in mind, we have taken an existing approach to hand pose estimation, first introduced by Oberweger et. al, and created an implementation in Keras using TensorFlow as a backend.</p>
-
+<h3 id="Existing-work">Existing work<a class="anchor-link" href="#Existing-work">&#182;</a></h3><p>This project will attempt to reproduce the results of Oberweger et. al in <a href="https://arxiv.org/abs/1502.06807">Hands Deep in Deep Learning for Hand Pose Estimation</a> using <a href="https://keras.io">Keras</a> with the <a href="https://www.tensorflow.org/">TensorFlow</a> backend using the <a href="http://cims.nyu.edu/~tompson/NYU_Hand_Pose_Dataset.htm">NYU hand pose dataset</a>.</p>
+<p>This initial implementation is based heavily on the work of <a href="http://www.ics.uci.edu/~jsupanci/">James Supancic</a> in his <a href="https://github.com/jsupancic/deep_hand_pose">Deep Hand Pose</a> project, which is implemented in the <a href="http://caffe.berkeleyvision.org/">Caffe</a> framework, but is likely to diverge substantially as my research continues.</p>
+<p>What works?
+Why did I focus on what I did?</p>
+<h3 id="Replication">Replication<a class="anchor-link" href="#Replication">&#182;</a></h3><p>There are two major components to this implementation: <a href="model">a deep learning model</a> and <a href="data">a data processing pipeline</a>.</p>
+<p>Overview of NYU work &amp; explanations
+Discuss Deep Hand Pose paper, project, and Caffe implementation (what &amp; why)</p>
+<h3 id="Mobile">Mobile<a class="anchor-link" href="#Mobile">&#182;</a></h3><h3 id="Future-work">Future work<a class="anchor-link" href="#Future-work">&#182;</a></h3>
 </div>
 </div>
 </div>
