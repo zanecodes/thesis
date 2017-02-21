@@ -10,11 +10,11 @@ This project contains my [Rose-Hulman undergraduate thesis](https://zanecodes.gi
 
 In order to run this project, you will need the following packages:
 
-[Jupyter Notebook](http://jupyter.readthedocs.io/en/latest/install.html)
-[TensorFlow](https://www.tensorflow.org/install/)
-[Keras](https://keras.io/#installation)
-[h5py](http://docs.h5py.org/en/latest/build.html)
-[NYU Hand Pose Dataset](http://cims.nyu.edu/~tompson/NYU_Hand_Pose_Dataset.htm#download)
+* [Jupyter Notebook](http://jupyter.readthedocs.io/en/latest/install.html)
+* [TensorFlow](https://www.tensorflow.org/install/)
+* [Keras](https://keras.io/#installation)
+* [h5py](http://docs.h5py.org/en/latest/build.html)
+* [NYU Hand Pose Dataset](http://cims.nyu.edu/~tompson/NYU_Hand_Pose_Dataset.htm#download)
 
 There are several ways to install these, namely Pip and Anaconda; I recommend using Anaconda.
 
