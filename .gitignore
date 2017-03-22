@@ -1,3 +1,5 @@
 .ipynb_checkpoints
 nyu_hand_dataset_v2
 dataset
+logs
+*.hdf5
