@@ -27,21 +27,22 @@
   * Work on a journal / log
   * ~~Report on preliminary results (if any)~~
 * Experiment with improvements
-  * Augment data with scales and translations
-    * Refactor for performance
-  * Add label depths
-  * Use autoencoder instead of PCA
+  * ~~Augment data with scales and translations~~
+    * ~~Refactor for performance~~
+  * ~~Add label depths~~
   * Add batch normalization
+  * Use autoencoder instead of PCA
+  * Use striding instead of max pooling
   * Change number of filters
   * Change depth of network
   * Change neurons in fully connected layers
+* Work on mobile port
 * Document and publish
   * ~~Create a GitHub page~~
+  * Generate results graphs
   * Add installation documentation
   * Add 'why' to code documentation
 
 ## This week
-* Refactor for performance
-* Add label depths
 * Add batch normalization
 * Add 'why' to code documentation
