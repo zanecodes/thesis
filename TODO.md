@@ -30,19 +30,25 @@
   * ~~Augment data with scales and translations~~
     * ~~Refactor for performance~~
   * ~~Add label depths~~
-  * Add batch normalization
+  * ~~Add batch normalization~~
   * Use autoencoder instead of PCA
-  * Use striding instead of max pooling
-  * Change number of filters
+  * Try more PCA components
+  * ~~Use striding instead of max pooling~~
+  * ~~Change number of filters~~
+  * Change batch size
   * Change depth of network
-  * Change neurons in fully connected layers
+  * ~~Change neurons in fully connected layers~~
 * Work on mobile port
 * Document and publish
   * ~~Create a GitHub page~~
-  * Generate results graphs
+  * ~~Generate results graphs~~
+  * Add model comparisons
+  * Start results section
   * Add installation documentation
   * Add 'why' to code documentation
 
 ## This week
-* Add batch normalization
-* Add 'why' to code documentation
+* Try more PCA components
+* Change batch size
+* Start results section
+* Add model comparisons
