@@ -11762,12 +11762,14 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">keras.models</span> <span class="k">import</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">model_from_yaml</span><span class="p">,</span> <span class="n">load_model</span>
-<span class="kn">from</span> <span class="nn">keras.optimizers</span> <span class="k">import</span> <span class="n">SGD</span>
+<span class="kn">from</span> <span class="nn">keras.optimizers</span> <span class="k">import</span> <span class="n">Adam</span>
 <span class="kn">from</span> <span class="nn">keras.callbacks</span> <span class="k">import</span> <span class="n">LearningRateScheduler</span><span class="p">,</span> <span class="n">ModelCheckpoint</span><span class="p">,</span> <span class="n">TensorBoard</span>
 <span class="kn">from</span> <span class="nn">keras.layers</span> <span class="k">import</span> <span class="o">*</span>
 <span class="kn">from</span> <span class="nn">keras.backend.tensorflow_backend</span> <span class="k">import</span> <span class="n">set_session</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">import</span> <span class="nn">scipy.misc</span>
 <span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">h5py</span>
 <span class="kn">from</span> <span class="nn">os</span> <span class="k">import</span> <span class="n">path</span>
 </pre></div>
@@ -11798,11 +11800,13 @@ The <a href="http://www.h5py.org/">.hdf5</a> file produced by <a href="data#Outp
 
 <span class="n">test_images</span>      <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;image/test&#39;</span><span class="p">]</span>
 <span class="n">test_labels</span>      <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;label/test&#39;</span><span class="p">]</span>
+<span class="n">test_centers</span>     <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;center/test&#39;</span><span class="p">]</span>
 
 <span class="n">train_images</span>     <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;image/train&#39;</span><span class="p">]</span>
 <span class="n">train_labels</span>     <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;label/train&#39;</span><span class="p">]</span>
+<span class="n">train_centers</span>    <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;center/train&#39;</span><span class="p">]</span>
 
-<span class="n">pca_eigenvectors</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;pca/eigenvectors&#39;</span><span class="p">][:</span><span class="mi">22</span><span class="p">]</span>
+<span class="n">pca_eigenvectors</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;pca/eigenvectors&#39;</span><span class="p">][:</span><span class="mi">30</span><span class="p">]</span>
 <span class="n">pca_mean</span>         <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;pca/mean&#39;</span><span class="p">]</span>
 </pre></div>
 
@@ -11811,108 +11815,125 @@ The <a href="http://www.h5py.org/">.hdf5</a> file produced by <a href="data#Outp
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Loss-function">Loss function<a class="anchor-link" href="#Loss-function">&#182;</a></h3><p>The loss function used in the <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/oberweger-bgn.prototxt#L574">Deep Hand Pose</a> project is <a href="http://caffe.berkeleyvision.org/tutorial/layers/euclideanloss.html">Caffe's Euclidean loss</a>, which is computed as</p>
-$$ \frac 1 {2N} \sum_{i=1}^N \| {x_1}_i - {x_2}_i \|^2 $$
-</div>
-</div>
-</div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">euclidean</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">y_pred</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Learning-rate-decay-policy">Learning rate decay policy<a class="anchor-link" href="#Learning-rate-decay-policy">&#182;</a></h3><p>The learning rate decay policy used in <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/solver.prototxt#L24">Deep Hand Pose</a> is <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/src/caffe/proto/caffe.proto#L162">Caffe's 'inv' policy</a>, where the current learning rate is defined to be</p>
-$$ r(i) = \frac {r(0)} {(1 + \gamma i) ^ p} $$
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">inv_decay</span><span class="p">(</span><span class="n">base_lr</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">power</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">decay</span><span class="p">(</span><span class="n">epoch</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">base_lr</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">epoch</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="n">power</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Resize an image to the specified dimensions, scaling its label accordingly</span>
+<span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+    <span class="n">scale</span>        <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span> <span class="o">/</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">label</span><span class="p">[::</span><span class="mi">3</span><span class="p">]</span>  <span class="o">*=</span> <span class="n">scale</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span> <span class="o">*=</span> <span class="n">scale</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     
-    <span class="k">return</span> <span class="n">decay</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Xavier-initializer">Xavier initializer<a class="anchor-link" href="#Xavier-initializer">&#182;</a></h3><p>The convolutional layers in the <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/oberweger-pca.prototxt#L53">Deep Hand Pose</a> project use <a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1XavierFiller.html#details">Caffe's Xavier filler</a>, which is computed as</p>
-$$ x \sim U(-a, +a) $$<p>where</p>
-$$ a = \sqrt {\frac 3 n} $$<p>and $ n $, by default, is the number of inputs to the layer (fan in).</p>
-<p>Keras has a similar <a href="https://github.com/fchollet/keras/blob/master/keras/initializations.py#L80">he_uniform</a> initializer, where</p>
-$$ a = \sqrt {\frac 6 n} $$<p>and $ n $ is the number of inputs to the layer.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">xavier</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dim_ordering</span><span class="o">=</span><span class="s1">&#39;th&#39;</span><span class="p">):</span>
-    <span class="n">fan_in</span><span class="p">,</span> <span class="n">fan_out</span> <span class="o">=</span> <span class="n">initializations</span><span class="o">.</span><span class="n">get_fans</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dim_ordering</span><span class="o">=</span><span class="n">dim_ordering</span><span class="p">)</span>
-    <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">3.</span> <span class="o">/</span> <span class="n">fan_in</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">initializations</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Gaussian-initializer">Gaussian initializer<a class="anchor-link" href="#Gaussian-initializer">&#182;</a></h3><p>The fully connected layers in the <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/oberweger-pca.prototxt#L195">Deep Hand Pose</a> project use <a href="http://caffe.berkeleyvision.org/doxygen/classcaffe_1_1GaussianFiller.html#details">Caffe's Gaussian filler</a> with various standard deviations.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">gaussian</span><span class="p">(</span><span class="n">std_dev</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">init</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">initializations</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">std_dev</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="c1"># TODO: Try to implement or use OpenCV&#39;s INTER_AREA resize strategy?</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">imresize</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">dimensions</span><span class="p">,</span> <span class="s1">&#39;bilinear&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
     
-    <span class="k">return</span> <span class="n">init</span>
+    <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">label</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Clip an image to the specified bounding box, translating its label accordingly</span>
+<span class="c1"># Bounding box should look like np.array([[x_1, y_1], [x_2, y_2]]), where</span>
+<span class="c1"># (x_1, y_1) are the coordinates of the lower left corner and </span>
+<span class="c1"># (x_2, y_2) are the coordinates of the upper right corner</span>
+<span class="k">def</span> <span class="nf">clip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">bounding_box</span><span class="p">):</span>
+    <span class="n">label</span><span class="p">[::</span><span class="mi">3</span><span class="p">]</span>  <span class="o">-=</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">label</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span> <span class="o">-=</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">image_box</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+    
+    <span class="n">padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">image_box</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bounding_box</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">image_box</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">bounding_box</span> <span class="o">+=</span> <span class="n">padding</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">padding</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">padding</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])))</span>
+    
+    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="s1">&#39;edge&#39;</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">bounding_box</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="nb">slice</span><span class="p">(</span><span class="o">*</span><span class="n">bounding_box</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])]</span>
+    
+    <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">label</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">augment</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">scale_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">translate_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)):</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    
+    <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale_range</span>
+    <span class="n">translate</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">translate_range</span>
+    
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+    <span class="n">bounds</span> <span class="o">-=</span> <span class="mf">0.5</span>
+    <span class="n">bounds</span> <span class="o">*=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">bounds</span> <span class="o">/=</span> <span class="n">scale</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">bounds</span> <span class="o">+=</span> <span class="mi">64</span>
+    <span class="n">bounds</span> <span class="o">-=</span> <span class="n">translate</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    
+    <span class="n">image</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">clip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>
+    <span class="n">image</span><span class="p">[</span><span class="n">image</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">]</span> <span class="o">/=</span> <span class="n">scale</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">image</span><span class="p">[</span><span class="n">image</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">translate</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">label</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span> <span class="o">/=</span> <span class="n">scale</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">label</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span> <span class="o">+=</span> <span class="n">translate</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    
+    <span class="n">image</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">))</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">label</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">augment_batch</span><span class="p">(</span><span class="n">image_batch</span><span class="p">,</span> <span class="n">label_batch</span><span class="p">,</span> <span class="n">scale_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">translate_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)):</span>
+    <span class="n">image_batch</span><span class="p">,</span> <span class="n">label_batch</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">augment</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">scale_range</span><span class="p">,</span> <span class="n">translate_range</span><span class="p">)</span> \
+                                     <span class="k">for</span> <span class="n">image</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">image_batch</span><span class="p">,</span> <span class="n">label_batch</span><span class="p">)])</span>
+    
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image_batch</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">label_batch</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">generate_batches</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">):</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">batch_indices</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">batch_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">batch_size</span><span class="p">)]</span>
+        <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">batch_indices</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">batch_indices</span><span class="p">:</span>
+            <span class="n">image_batch</span><span class="p">,</span> <span class="n">label_batch</span> <span class="o">=</span> <span class="n">images</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
+            <span class="k">yield</span> <span class="n">image_batch</span><span class="p">,</span> <span class="n">label_batch</span>
 </pre></div>
 
 </div>
@@ -11952,35 +11973,28 @@ $$ a = \sqrt {\frac 6 n} $$<p>and $ n $ is the number of inputs to the layer.</p
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">([</span>
         <span class="n">Convolution2D</span><span class="p">(</span>
-            <span class="n">nb_filter</span>   <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="n">nb_filter</span>   <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
             <span class="n">nb_row</span>      <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
             <span class="n">nb_col</span>      <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-            <span class="n">init</span>        <span class="o">=</span> <span class="n">xavier</span><span class="p">,</span>
+            <span class="n">subsample</span>   <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
             <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="p">),</span>
-        <span class="n">MaxPooling2D</span><span class="p">(</span>
-            <span class="n">pool_size</span>   <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">LeakyReLU</span><span class="p">(</span>
+            <span class="n">alpha</span>       <span class="o">=</span> <span class="mf">0.05</span>
+        <span class="p">),</span>
+        <span class="n">Convolution2D</span><span class="p">(</span>
+            <span class="n">nb_filter</span>   <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
+            <span class="n">nb_row</span>      <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="n">nb_col</span>      <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="n">subsample</span>   <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
         <span class="p">),</span>
         <span class="n">LeakyReLU</span><span class="p">(</span>
             <span class="n">alpha</span>       <span class="o">=</span> <span class="mf">0.05</span>
         <span class="p">),</span>
         <span class="n">Convolution2D</span><span class="p">(</span>
-            <span class="n">nb_filter</span>   <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+            <span class="n">nb_filter</span>   <span class="o">=</span> <span class="mi">12</span><span class="p">,</span>
             <span class="n">nb_row</span>      <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
             <span class="n">nb_col</span>      <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-            <span class="n">init</span>        <span class="o">=</span> <span class="n">xavier</span>
-        <span class="p">),</span>
-        <span class="n">MaxPooling2D</span><span class="p">(</span>
-            <span class="n">pool_size</span>   <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">LeakyReLU</span><span class="p">(</span>
-            <span class="n">alpha</span>       <span class="o">=</span> <span class="mf">0.05</span>
-        <span class="p">),</span>
-        <span class="n">Convolution2D</span><span class="p">(</span>
-            <span class="n">nb_filter</span>   <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-            <span class="n">nb_row</span>      <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-            <span class="n">nb_col</span>      <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
-            <span class="n">init</span>        <span class="o">=</span> <span class="n">xavier</span>
         <span class="p">),</span>
         <span class="n">LeakyReLU</span><span class="p">(</span>
             <span class="n">alpha</span>       <span class="o">=</span> <span class="mf">0.05</span>
@@ -11988,20 +12002,17 @@ $$ a = \sqrt {\frac 6 n} $$<p>and $ n $ is the number of inputs to the layer.</p
         <span class="n">Flatten</span><span class="p">(),</span>
         <span class="n">Dense</span><span class="p">(</span>
             <span class="n">output_dim</span>  <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
-            <span class="n">init</span>        <span class="o">=</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">std_dev</span><span class="o">=</span><span class="mf">0.01</span><span class="p">),</span>
             <span class="n">activation</span>  <span class="o">=</span> <span class="s1">&#39;relu&#39;</span>
         <span class="p">),</span>
         <span class="n">Dense</span><span class="p">(</span>
             <span class="n">output_dim</span>  <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
-            <span class="n">init</span>        <span class="o">=</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">std_dev</span><span class="o">=</span><span class="mf">0.05</span><span class="p">),</span>
             <span class="n">activation</span>  <span class="o">=</span> <span class="s1">&#39;relu&#39;</span>
         <span class="p">),</span>
         <span class="n">Dense</span><span class="p">(</span>
-            <span class="n">output_dim</span>  <span class="o">=</span> <span class="mi">22</span><span class="p">,</span>
-            <span class="n">init</span>        <span class="o">=</span> <span class="n">gaussian</span><span class="p">(</span><span class="n">std_dev</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+            <span class="n">output_dim</span>  <span class="o">=</span> <span class="mi">30</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="n">Dense</span><span class="p">(</span>
-            <span class="n">output_dim</span>  <span class="o">=</span> <span class="mi">28</span><span class="p">,</span>
+            <span class="n">output_dim</span>  <span class="o">=</span> <span class="mi">42</span><span class="p">,</span>
             <span class="n">weights</span>     <span class="o">=</span> <span class="p">(</span><span class="n">pca_eigenvectors</span><span class="p">,</span> <span class="n">pca_mean</span><span class="p">),</span>
             <span class="n">trainable</span>   <span class="o">=</span> <span class="kc">False</span>
         <span class="p">)</span>
@@ -12018,8 +12029,7 @@ $$ a = \sqrt {\frac 6 n} $$<p>and $ n $ is the number of inputs to the layer.</p
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Optimizer">Optimizer<a class="anchor-link" href="#Optimizer">&#182;</a></h3><p>The optimizer used in the <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/solver.prototxt#L37">Deep Hand Pose</a> project is <a href="http://caffe.berkeleyvision.org/tutorial/solver.html#sgd">Caffe's stochastic gradient descent</a>, with an <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/solver.prototxt#L17">initial learning rate</a> of 0.000005 and a <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/solver.prototxt#L19">momentum</a> of 0.9.</p>
-<p>As mentioned <a href="#Loss-function">above</a>, the loss function used is Euclidean loss.</p>
+<h3 id="Optimizer">Optimizer<a class="anchor-link" href="#Optimizer">&#182;</a></h3><p>We use the Adam optimizer, which adaptively modifies the learning rate.</p>
 
 </div>
 </div>
@@ -12030,12 +12040,37 @@ $$ a = \sqrt {\frac 6 n} $$<p>and $ n $ is the number of inputs to the layer.</p
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
-    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">SGD</span><span class="p">(</span>
-        <span class="n">lr</span>       <span class="o">=</span> <span class="mf">0.000005</span><span class="p">,</span>
-        <span class="n">momentum</span> <span class="o">=</span> <span class="mf">0.9</span>
-    <span class="p">),</span>
-    <span class="n">loss</span>         <span class="o">=</span> <span class="n">euclidean</span>
+    <span class="n">optimizer</span> <span class="o">=</span> <span class="n">Adam</span><span class="p">(),</span>
+    <span class="n">loss</span>      <span class="o">=</span> <span class="s1">&#39;mse&#39;</span>
 <span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train_data</span> <span class="o">=</span> <span class="n">generate_batches</span><span class="p">(</span><span class="n">train_images</span><span class="p">,</span> <span class="n">train_labels</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+<span class="n">test_data</span>  <span class="o">=</span> <span class="n">generate_batches</span><span class="p">(</span><span class="n">test_images</span><span class="p">,</span> <span class="n">test_labels</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">augmented_train_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">augment_batch</span><span class="p">(</span><span class="n">image_batch</span><span class="p">,</span> <span class="n">label_batch</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> \
+                        <span class="k">for</span> <span class="n">image_batch</span><span class="p">,</span> <span class="n">label_batch</span> <span class="ow">in</span> <span class="n">train_data</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12048,8 +12083,7 @@ $$ a = \sqrt {\frac 6 n} $$<p>and $ n $ is the number of inputs to the layer.</p
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Training">Training<a class="anchor-link" href="#Training">&#182;</a></h3><p>Similarly to the Deep Hand Pose project, we perform <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/solver.prototxt#L31">40000 epochs</a> of training with batches of <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/oberweger-pca.prototxt#L14">64 images</a>.</p>
-<p>As mentioned <a href="#Learning-rate-decay-policy">above</a>, the learning rate decay used is Caffe's 'inv' policy, with an <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/solver.prototxt#L17">initial learning rate</a> of 0.000005, a <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/solver.prototxt#L25">gamma</a> of 0.0001, and a <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/solver.prototxt#L26">power</a> of 0.75.</p>
+<h3 id="Training">Training<a class="anchor-link" href="#Training">&#182;</a></h3><p>Similarly to the Deep Hand Pose project, we train on batches of <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/examples/deep_hand_pose/oberweger-pca.prototxt#L14">64 images and labels</a>.</p>
 
 </div>
 </div>
@@ -12059,128 +12093,19 @@ $$ a = \sqrt {\frac 6 n} $$<p>and $ n $ is the number of inputs to the layer.</p
 <div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">train_images</span><span class="p">,</span>
-    <span class="n">train_labels</span><span class="p">,</span>
-    <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
-    <span class="n">shuffle</span>    <span class="o">=</span> <span class="s1">&#39;batch&#39;</span><span class="p">,</span>
-    <span class="n">nb_epoch</span>   <span class="o">=</span> <span class="mi">40000</span><span class="p">,</span>
-    <span class="n">callbacks</span>  <span class="o">=</span> <span class="p">[</span>
-        <span class="n">LearningRateScheduler</span><span class="p">(</span>
-            <span class="n">inv_decay</span><span class="p">(</span>
-                <span class="n">base_lr</span> <span class="o">=</span> <span class="mf">0.000005</span><span class="p">,</span>
-                <span class="n">gamma</span>   <span class="o">=</span> <span class="mf">0.0001</span><span class="p">,</span>
-                <span class="n">power</span>   <span class="o">=</span> <span class="mf">0.75</span>
-        <span class="p">)),</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">fit_generator</span><span class="p">(</span>
+    <span class="n">augmented_train_data</span><span class="p">,</span>
+    <span class="n">validation_data</span>   <span class="o">=</span> <span class="n">test_data</span><span class="p">,</span>
+    <span class="n">samples_per_epoch</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_labels</span><span class="p">),</span>
+    <span class="n">nb_val_samples</span>    <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_labels</span><span class="p">),</span>
+    <span class="n">nb_epoch</span>          <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="n">callbacks</span>         <span class="o">=</span> <span class="p">[</span>
+        <span class="n">TensorBoard</span><span class="p">(),</span>
         <span class="n">ModelCheckpoint</span><span class="p">(</span>
-            <span class="n">filepath</span> <span class="o">=</span> <span class="s1">&#39;model.hdf5&#39;</span>
+            <span class="n">filepath</span>       <span class="o">=</span> <span class="s1">&#39;model.hdf5&#39;</span><span class="p">,</span>
+            <span class="n">save_best_only</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="p">)</span>
     <span class="p">])</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Evaluation">Evaluation<a class="anchor-link" href="#Evaluation">&#182;</a></h3><p>We evaluate the model on the training set with a batch size of 64, measuring the Euclidean loss.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
-    <span class="n">test_images</span><span class="p">,</span>
-    <span class="n">test_labels</span><span class="p">,</span>
-    <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">64</span>
-<span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="o">%</span><span class="k">matplotlib</span> inline
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">test_predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-    <span class="n">test_images</span><span class="p">,</span>
-    <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">64</span>
-<span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">train_predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-    <span class="n">train_images</span><span class="p">,</span>
-    <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">64</span>
-<span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">i</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">images</span> <span class="o">=</span> <span class="n">test_images</span>
-<span class="n">predictions</span> <span class="o">=</span> <span class="n">test_predictions</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="n">test_labels</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">predictions</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">predictions</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;wo&#39;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;wo&#39;</span><span class="p">)</span>
 </pre></div>
 
 </div>
