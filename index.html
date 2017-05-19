@@ -12654,6 +12654,15 @@ QWgx/j8dUw21nEOg+gAAAABJRU5ErkJggg==
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<center><h5>Figure 1.</h5></center>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <p>Augmented and virtual reality hardware is becoming increasingly dependent on mobile architectures. Smartphones have become a cost effective way to bring virtual reality to a wider audience, using head-mounted cases such as Samsung's gear VR and Google's Daydream. Newer augmented reality devices like Microsoft's HoloLens and other untethered headsets under development also rely on smartphone hardware. Hand gestures are a natural and intuitive method of interaction in virtual and augmented reality scenarios.  Bringing gesture support to these systems without the need for bulky gloves or visual markers has the potential to expand their use cases, making them easier to use and more flexible. Gestures in augmented and virtual reality can be used to perform many actions, such as direct interaction with the virtual environment and objects, without requiring users to learn a unique set of controls for each application.</p>
 <p>The human hand possesses several properties which make pose estimation challenging. The first is the large number of degrees of freedom; models of the hand can have from <a href="data#input-images">25 to 50 degrees of freedom</a>, though these models do not include joint angle constraints or the relationships between adjacent finger angles. The second is self-similarity; different fingers are difficult to distinguish, which can lead to incorrect inverse kinematics solutions. The last is self-occlusion; fingers may pass in front of one another, and the palm is concave, resulting in many parts of the hand becoming occluded and thus impossible to segment.</p>
 <p>On top of these inherent properties of the hand, the typical use cases for hand pose estimation introduce additional difficulties. In augmented and virtual reality applications, environmental conditions such as lighting and background color can vary wildly, compounding the difficulty of detecting hand features. Such applications may also require the tracking of hands at relatively high speeds in order to be useful, while most mobile cameras are only capable of 30 to 60 frames per second, even without taking processing speed into account. Finally, such mobile applications will be severely resource-constrained when compared to desktop or server hardware, limiting maximum frame rates and imposing a limit on latency.</p>
@@ -12669,7 +12678,7 @@ QWgx/j8dUw21nEOg+gAAAABJRU5ErkJggg==
 </ul>
 <p>Each is a thoroughly documented IPython notebook, intended to be read as an integral part of this thesis, as they contain the technical information relevant to this report. The data processing script takes the NYU Hand Pose Dataset as input and produces a single <a href="https://support.hdfgroup.org/HDF5/">.hdf5</a> archive, containing images and labels suitable for input to the deep learning model, performing data conversion and normalization during processing. The deep learning model builds a deep convolutional neural network, training and evaluating it on the processed dataset.</p>
 <h3 id="Models">Models<a class="anchor-link" href="#Models">&#182;</a></h3><p><img src="architecture.png" alt="Architecture"></p>
-<center><h5>Figure 1.</h5></center><p>Our baseline model (Fig. 1) was built on the architecture used by Oberweger <em>et al.</em> as reimplemented by James Supancic. Their architecture consisted of three convolutional layers, each with 8 filters of $ 5 \times 5 $ kernels. Each convolution layer uses a leaky ReLU activation function, similar to ReLU but rather than cutting off negative values, they are scaled by a factor $ \alpha = 0.05 $. The first two convolutional layers perform $ 2 \times 2 $ max-pooling. The output from these layers is then flattened and fed into two fully connected layers of 1024 neurons, followed by 22 neurons which create the pose prior, and finally output into 28 neurons which use the frozen PCA mean and eigenvectors to reproject the predictions into joint locations.</p>
+<center><h5>Figure 2.</h5></center><p>Our baseline model (Fig. 1) was built on the architecture used by Oberweger <em>et al.</em> as reimplemented by James Supancic. Their architecture consisted of three convolutional layers, each with 8 filters of $ 5 \times 5 $ kernels. Each convolution layer uses a leaky ReLU activation function, similar to ReLU but rather than cutting off negative values, they are scaled by a factor $ \alpha = 0.05 $. The first two convolutional layers perform $ 2 \times 2 $ max-pooling. The output from these layers is then flattened and fed into two fully connected layers of 1024 neurons, followed by 22 neurons which create the pose prior, and finally output into 28 neurons which use the frozen PCA mean and eigenvectors to reproject the predictions into joint locations.</p>
 <p>After training a baseline implementation with similar parameters to Oberweger <em>et al.</em>, we began exploring different combinations of hyperparameters to see which had the most effect on the results. In order to best compare our results to those obtained by Oberweger <em>et al.</em>, we used the same performance metric. This metric was the percentage of test samples in which every predicted joint position fell within a threshold distance of the ground truth.</p>
 <p>All models were trained on the same testing/validation split, as output by <a href="data">data.ipynb</a>. PCA eigenvectors and means were recomputed for certain models with differing amounts of data augmentation performed, as described below. All models were trained using the Adam optimizer solving for mean squared error, with 64 samples per batch over 100 epochs.</p>
 <p>Data augmentation was performed on certain models to improve performance in cases where the precise hand center was not known, in order to better emulate real world conditions and make the model more robust in practical applications. However, this makes our results difficult to compare to Oberweger <em>et al.</em> Augmentation consisted of translating and scaling training samples at random within a set range. For example, an image translated over a range of size (16, 16, 0.4) may be offset by anywhere from -8 to +8 in the x and y directions and -0.2 to +0.2 in the z direction. An image scaled over a range of size (0.2, 0.2, 0.2) will be scaled by a factor of between 0.9 and 1.1 in each direction. Each image and its corresponding label must be transformed identically, and values along the edges of input images were simply repeated.</p>
@@ -13370,7 +13379,7 @@ ppOBpmmappOBpmmahk4GmqZpGjoZaJqmacD/B9dLWP11U9HsAAAAAElFTkSuQmCC
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<center><h5>Figure 2.</h5></center>
+<center><h5>Figure 3.</h5></center>
 </div>
 </div>
 </div>
@@ -14052,7 +14061,7 @@ wCQDwzAMA5MMDMMwDOD/AHQFhLvD/L/5AAAAAElFTkSuQmCC
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<center><h5>Figure 3.</h5></center>
+<center><h5>Figure 4.</h5></center>
 </div>
 </div>
 </div>
