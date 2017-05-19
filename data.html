@@ -18544,7 +18544,7 @@ ShAFAABgUoIoAAAAkxJEAQAAmJQgCgAAwKQEUQAAACb1/wEhcFuJX7W1zgAAAABJRU5ErkJggg==
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Depth-images">Depth images<a class="anchor-link" href="#Depth-images">&#182;</a></h4><p>Depth images and synthetic depth images <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/src/caffe/jvl.cpp#L507">store the most significant bits of depth data in the green channel and the least significant bits in the blue channel</a>.</p>
+<h4 id="Depth-images">Depth images<a class="anchor-link" href="#Depth-images">&#182;</a></h4><p>Depth images and synthetic depth images <a href="https://github.com/jsupancic/deep_hand_pose/blob/master/src/caffe/jvl.cpp#L507">store the most significant bits of depth data in the green channel and the least significant bits in the blue channel</a>. We rectify this by bit shifting the green channel to the left 8 bits and adding it to the blue channel.</p>
 
 </div>
 </div>
@@ -26447,8 +26447,6 @@ ZRGGAQAAsKwvC0Hmn28FnHAAAAAASUVORK5CYII=
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Resize an image to the specified dimensions, scaling its label accordingly</span>
 <span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
     <span class="n">label</span><span class="o">.</span><span class="n">ix</span><span class="p">[:,</span> <span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">]]</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dimensions</span><span class="p">)</span> <span class="o">/</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    
-    <span class="c1"># TODO: Try to implement or use OpenCV&#39;s INTER_AREA resize strategy?</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">imresize</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">dimensions</span><span class="p">,</span> <span class="s1">&#39;bilinear&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;F&#39;</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">label</span>
